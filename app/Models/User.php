@@ -7,6 +7,8 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\Role;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -39,6 +41,36 @@ final class User extends Authenticatable
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === Role::ADMIN;
+    }
+
+    public function isTeacher(): bool
+    {
+        return $this->role === Role::TEACHER;
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->role === Role::STUDENT;
+    }
+
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'teacher_id');
+    }
+
+    public function students(): HasMany
+    {
+        return $this->hasMany(self::class, 'teacher_id');
+    }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(Invitation::class, 'invited_by');
     }
 
     /**
