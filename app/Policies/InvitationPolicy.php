@@ -1,23 +1,41 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Policies;
 
 use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class InvitationPolicy
+final class InvitationPolicy
 {
     use HandlesAuthorization;
 
     public function viewAny(User $user): bool
     {
-        return $user->isAdmin() || $user->isTeacher();
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        if ($user->isTeacher()) {
+            return true;
+        }
+
+        return $user->isTeacher();
     }
 
     public function create(User $user): bool
     {
-        return $user->isAdmin() || $user->isTeacher();
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        if ($user->isTeacher()) {
+            return true;
+        }
+
+        return $user->isTeacher();
     }
 
     public function delete(User $user, Invitation $invitation): bool
