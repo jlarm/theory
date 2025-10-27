@@ -28,6 +28,11 @@ final class Invitation extends Model
         'updated_at' => 'datetime',
     ];
 
+    public static function generateToken(): string
+    {
+        return Str::random(64);
+    }
+
     public function invitedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'invited_by');
@@ -46,10 +51,5 @@ final class Invitation extends Model
     public function isAccepted(): bool
     {
         return $this->accepted_at !== null;
-    }
-
-    public function generateToken(): string
-    {
-        return Str::random(64);
     }
 }
