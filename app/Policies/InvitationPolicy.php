@@ -14,28 +14,12 @@ final class InvitationPolicy
 
     public function viewAny(User $user): bool
     {
-        if ($user->isAdmin()) {
-            return true;
-        }
-
-        if ($user->isTeacher()) {
-            return true;
-        }
-
-        return $user->isTeacher();
+        return $user->isAdmin() || $user->isTeacher();
     }
 
     public function create(User $user): bool
     {
-        if ($user->isAdmin()) {
-            return true;
-        }
-
-        if ($user->isTeacher()) {
-            return true;
-        }
-
-        return $user->isTeacher();
+        return $user->isAdmin() || $user->isTeacher();
     }
 
     public function delete(User $user, Invitation $invitation): bool

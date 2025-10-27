@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-use App\Models\{Invitation, User};
-use Illuminate\Support\Facades\Mail;
+use App\Enums\Role;
 use App\Mail\InvitationMail;
+use App\Models\Invitation;
+use Flux\Flux;
+use Illuminate\Support\Facades\Mail;
+use Livewire\Attributes\{Computed, Rule};
 use Livewire\Volt\Component;
-use Livewire\Attributes\{Rule, Computed};
 
 new class extends Component
 {
@@ -19,10 +21,12 @@ new class extends Component
 
         $this->validate();
 
+        $roles = [Role::STUDENT->value];
+
         $invitation = Invitation::create([
             'email' => $this->email,
             'token' => Invitation::generateToken(),
-            'role' => 'student',
+            'roles' => $roles,
             'invited_by' => auth()->id(),
             'teacher_id' => auth()->id(),
             'expires_at' => now()->addDays(7),
@@ -30,10 +34,9 @@ new class extends Component
 
         Mail::to($this->email)->send(new InvitationMail($invitation));
 
-        session()->flash('success', 'Student invitation sent successfully.');
+        Flux::toast('Student invitation sent successfully.');
 
         $this->reset('email');
-        $this->dispatch('invitation-sent');
     }
 
     #[Computed]
@@ -46,7 +49,7 @@ new class extends Component
     public function pendingInvitations()
     {
         return Invitation::where('invited_by', auth()->id())
-            ->where('role', 'student')
+            ->whereJsonContains('roles', Role::STUDENT->value)
             ->whereNull('accepted_at')
             ->latest()
             ->get();
@@ -60,7 +63,7 @@ new class extends Component
 
         $invitation->delete();
 
-        $this->dispatch('invitation-cancelled');
+        Flux::toast('Invitation cancelled.');
     }
 }; ?>
 

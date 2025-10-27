@@ -15,18 +15,24 @@ final class Invitation extends Model
     /** @use HasFactory<\Database\Factories\InvitationFactory> */
     use HasFactory;
 
-    protected $casts = [
-        'id' => 'integer',
-        'email' => 'string',
-        'token' => 'string',
-        'role' => Role::class,
-        'invited_by' => 'integer',
-        'teacher_id' => 'integer',
-        'expires_at' => 'datetime',
-        'accepted_at' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+    protected $fillable = [
+        'email',
+        'token',
+        'roles',
+        'invited_by',
+        'teacher_id',
+        'expires_at',
+        'accepted_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'roles' => 'array',
+            'expires_at' => 'datetime',
+            'accepted_at' => 'datetime',
+        ];
+    }
 
     public static function generateToken(): string
     {
@@ -51,5 +57,13 @@ final class Invitation extends Model
     public function isAccepted(): bool
     {
         return $this->accepted_at !== null;
+    }
+
+    public function getRolesAsEnums(): array
+    {
+        return array_map(
+            fn (string $role) => Role::from($role),
+            $this->roles ?? []
+        );
     }
 }

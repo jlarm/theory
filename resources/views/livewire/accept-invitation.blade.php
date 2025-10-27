@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Models\Invitation;
 use App\Models\User;
+use Flux\Flux;
+use Illuminate\Support\Facades\{Auth, Hash};
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Rule;
 use Livewire\Volt\Component;
@@ -11,10 +13,13 @@ use Livewire\Volt\Component;
 new class extends Component {
     #[Locked]
     public ?Invitation $invitation = null;
+
     #[Rule(['required', 'string', 'max:255'])]
     public string $name = '';
-    #[Rule(['required', 'string', 'min:8', 'confirmed:'])]
+
+    #[Rule(['required', 'string', 'min:8', 'confirmed'])]
     public string $password = '';
+
     public string $password_confirmation = '';
 
     public function mount(string $token): void
@@ -36,7 +41,7 @@ new class extends Component {
             'name' => $this->name,
             'email' => $this->invitation->email,
             'password' => Hash::make($this->password),
-            'role' => $this->invitation->role,
+            'roles' => $this->invitation->roles,
             'teacher_id' => $this->invitation->teacher_id,
             'email_verified_at' => now(),
         ]);
@@ -47,6 +52,8 @@ new class extends Component {
 
         Auth::login($user);
 
+        Flux::toast('Welcome! Your account has been created.');
+
         $this->redirect('/dashboard', navigate: true);
     }
 } ?>
@@ -56,10 +63,10 @@ new class extends Component {
 
     <div class="mt-4">
         <flux:text>
-            You've been invited to join as a <strong>{{ $invitation->role }}</strong>.
+            You've been invited to join as a <strong>{{ implode(' & ', array_map('ucfirst', $invitation->roles)) }}</strong>.
         </flux:text>
 
-        @if ($invitation->role === 'student')
+        @if (in_array('student', $invitation->roles) && $invitation->teacher)
             <flux:text class="mt-2">
                 You'll be assigned to <strong>{{ $invitation->teacher->name }}</strong>.
             </flux:text>

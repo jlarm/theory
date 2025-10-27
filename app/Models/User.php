@@ -43,19 +43,49 @@ final class User extends Authenticatable
             ->implode('');
     }
 
+    public function hasRole(Role $role): bool
+    {
+        return in_array($role->value, $this->roles ?? []);
+    }
+
+    public function hasAnyRole(array $roles): bool
+    {
+        $roleValues = array_map(fn (Role $role) => $role->value, $roles);
+
+        return ! empty(array_intersect($roleValues, $this->roles ?? []));
+    }
+
+    public function addRole(Role $role): void
+    {
+        $roles = $this->roles ?? [];
+
+        if (! in_array($role->value, $roles)) {
+            $roles[] = $role->value;
+            $this->roles = $roles;
+            $this->save();
+        }
+    }
+
+    public function removeRole(Role $role): void
+    {
+        $roles = $this->roles ?? [];
+        $this->roles = array_values(array_filter($roles, fn ($r) => $r !== $role->value));
+        $this->save();
+    }
+
     public function isAdmin(): bool
     {
-        return $this->role === Role::ADMIN;
+        return $this->hasRole(Role::ADMIN);
     }
 
     public function isTeacher(): bool
     {
-        return $this->role === Role::TEACHER;
+        return in_array(Role::TEACHER, $this->roles);
     }
 
     public function isStudent(): bool
     {
-        return $this->role === Role::STUDENT;
+        return $this->hasRole(Role::STUDENT);
     }
 
     public function teacher(): BelongsTo
@@ -83,7 +113,7 @@ final class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'role' => Role::class,
+            'roles' => 'array',
         ];
     }
 }
